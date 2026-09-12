@@ -12,11 +12,15 @@ Copy the whole `sdcard/literaryclock` folder to the root of a FAT32 card:
 
 ```
 /literaryclock/
-  quotes.txt     3,527 quotes covering 1,432 of the 1,440 minutes (generated)
-  quotes.idx     lookup index for quotes.txt (generated; rebuilt by the clock if stale)
-  config.txt     WiFi, timezone, brightness, touch calibration
-  personal.txt   your own quotes, shown ahead of the database
+  quotes.txt          3,527 quotes covering 1,432 of the 1,440 minutes (generated)
+  quotes.idx          lookup index for quotes.txt (generated; rebuilt by the clock if stale)
+  config.example.txt  template: copy to config.txt and fill in WiFi, timezone, brightness, touch
+  personal.txt        your own quotes, shown ahead of the database
 ```
+
+`config.txt` is git-ignored because it holds your WiFi password. Copy the
+example to `config.txt` before writing the card, or let the clock create a
+default one on first boot and use the WiFi setup screen.
 
 `quotes.txt` and `quotes.idx` come from `tools/build_quotes.py`, which cleans
 `data/litclock_annotated.csv` (curly quotes and dashes to ASCII, `<br>` to
@@ -27,7 +31,7 @@ over 450 characters that cannot fit the panel. Rerun it after editing the CSV.
 
 The clock has no backup battery, so it gets the time over WiFi from NTP and
 re-syncs hourly. Fill in `wifi_ssid`, `wifi_password` and `timezone` in
-`config.txt`, or leave them blank and use the on-screen **WiFi setup**: the
+`config.txt` (copied from `config.example.txt`), or leave them blank and use the on-screen **WiFi setup**: the
 clock hosts a network called `LiteraryClock`; join it from a phone and a page
 opens where you pick your network and timezone. It writes the same
 `config.txt` and restarts.
