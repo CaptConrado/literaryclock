@@ -58,6 +58,32 @@ TZ string.
   `touch_*` keys in `config.txt`. If the crosshair moves along the wrong axis,
   set `touch_swap_xy = true`; if it moves the wrong way, use `touch_invert_x`/`_y`.
 
+## Adding more quotes
+
+`tools/mine_gutenberg.py` downloads public-domain novels from Project
+Gutenberg (ids listed in `data/gutenberg_books.txt`), finds sentences that
+name an exact time ("a quarter past nine", "8.15", "the clock struck seven"),
+guesses am or pm from nearby words, and writes `data/candidates.csv` for you to
+review:
+
+```
+tools/mine_gutenberg.py                # all listed books -> data/candidates.csv
+tools/mine_gutenberg.py --gaps         # only minutes that currently have fewer than 2 quotes
+tools/mine_gutenberg.py --ids 103 1661 # specific books
+```
+
+Open the file in a spreadsheet (pipe-delimited), check the `time` column where
+`ampm` says `guess`, put `y` in the `keep` column for the ones you like, then:
+
+```
+tools/mine_gutenberg.py --merge data/candidates.csv   # appends to data/extra_quotes.csv
+tools/build_quotes.py                                 # rebuilds quotes.txt for the card
+```
+
+Anything you write by hand can go straight into `data/extra_quotes.csv` using
+the same `HH:MM|time phrase|quote|Title|Author|sfw` format. Downloaded books
+are cached in `data/gutenberg/`, which git ignores.
+
 ## Building and flashing
 
 Requires `arduino-cli` with the `esp32` core and these libraries in the

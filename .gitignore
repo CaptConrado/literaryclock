@@ -4,3 +4,4 @@ build/
 literaryclock/build/
 # Real card config holds WiFi credentials; only the example is tracked.
 sdcard/literaryclock/config.txt
+data/gutenberg/

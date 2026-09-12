@@ -2,7 +2,8 @@
 """Build the SD-card quote database for the Literary Clock.
 
 Reads data/litclock_annotated.csv (pipe-delimited, from the open
-literature-clock project, CC BY-NC-SA 2.5) and writes:
+literature-clock project, CC BY-NC-SA 2.5) plus data/extra_quotes.csv if
+present (your own curated additions, same format) and writes:
 
   sdcard/literaryclock/quotes.txt   one quote per line, ASCII only:
         HH:MM|quote text with {time phrase} marked|Title|Author|S
@@ -27,6 +28,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "data" / "litclock_annotated.csv"
+EXTRA = ROOT / "data" / "extra_quotes.csv"   # curated additions from tools/mine_gutenberg.py --merge
 OUT_DIR = ROOT / "sdcard" / "literaryclock"
 MAX_QUOTE_CHARS = 450   # longer quotes cannot fit a 320x240 panel legibly
 
@@ -84,8 +86,13 @@ def sfw_flag(v: str) -> str:
 def main() -> int:
     per_minute = defaultdict(list)
     dropped_phrase = dropped_long = 0
-    with SRC.open(encoding="utf-8", newline="") as f:
-        for row in csv.reader(f, delimiter="|", quoting=csv.QUOTE_NONE):
+    sources = [SRC] + ([EXTRA] if EXTRA.exists() else [])
+    rows = []
+    for src in sources:
+        with src.open(encoding="utf-8", newline="") as f:
+            rows += list(csv.reader(f, delimiter="|", quoting=csv.QUOTE_NONE))
+    if True:
+        for row in rows:
             if len(row) < 5 or not re.fullmatch(r"\d\d:\d\d", row[0]):
                 continue
             hhmm, phrase, quote, title, author = (c.strip() for c in row[:5])
