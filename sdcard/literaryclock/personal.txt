@@ -1,0 +1,4 @@
+# Your own quotes. One per line, checked before the main database:
+#   HH:MM|quote text with the {time phrase} in braces|Title|Author
+# Use \n inside the quote for a paragraph break. Lines not starting with a time are ignored.
+12:00|The clock struck {noon}, and the whole house seemed to exhale.|An Example|You

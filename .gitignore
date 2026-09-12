@@ -1,0 +1,4 @@
+build/
+.DS_Store
+# The generated database is committed so the sdcard folder can be copied as-is.
+literaryclock/build/

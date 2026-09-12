@@ -1,0 +1,28 @@
+# Literary Clock settings. Edit on a computer or via the WiFi setup screen.
+
+# WiFi network used to fetch the time. Leave blank to set the time by touch.
+wifi_ssid = 
+wifi_password = 
+
+# Timezone: a name such as Europe/London or America/New_York (see README
+# for the supported list), or a POSIX TZ string like GMT0BST,M3.5.0/1,M10.5.0
+timezone = Europe/London
+
+clock_24h = true
+show_time = true
+sfw_only = false
+
+# Backlight 5-255, and optional dimming between two times of day.
+brightness = 255
+night_brightness = 30
+night_start = off
+night_end = off
+
+# Touch calibration. Use the Touch test screen (long press) to read raw values.
+touch_x_min = 200
+touch_x_max = 3700
+touch_y_min = 240
+touch_y_max = 3800
+touch_swap_xy = false
+touch_invert_x = false
+touch_invert_y = false
