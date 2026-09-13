@@ -1,5 +1,6 @@
 #include "touch.h"
 #include "config.h"
+#include "display.h"
 #include <XPT2046_Bitbang.h>
 
 static const int T_MOSI = 32, T_MISO = 39, T_CLK = 25, T_CS = 33;
@@ -27,8 +28,9 @@ bool touchGet(int16_t& x, int16_t& y) {
   long sy = map((long)yr, config.touchYMin, config.touchYMax, 0, 239);
   if (config.touchInvertX) sx = 319 - sx;
   if (config.touchInvertY) sy = 239 - sy;
-  x = constrain(sx, 0, 319);
-  y = constrain(sy, 0, 239);
+  int xs, ys;
+  landscapeToScreen(constrain(sx, 0, 319), constrain(sy, 0, 239), xs, ys);
+  x = xs; y = ys;
   return true;
 }
 

@@ -50,12 +50,19 @@ Tehran, Jerusalem; Australia/Sydney, Melbourne, Brisbane, Adelaide, Perth;
 Africa/Johannesburg, Cairo, Lagos, Nairobi. Anything else is treated as a POSIX
 TZ string.
 
+## Orientation
+
+Set `orientation` in `config.txt` to `landscape`, `portrait`,
+`landscape_flipped` or `portrait_flipped`, or use **Rotate** in the menu, which
+cycles through the four and saves the choice. Touch calibration carries over
+between orientations.
+
 ## Touch
 
 - Each minute shows one quote, picked at random from that minute's set and
   held until the minute changes. Entries in `personal.txt` take priority.
-- Long press: menu with Another quote, Set time, WiFi setup, 12h/24h toggle,
-  and Calibrate. A short tap does nothing, so stray touches never change the
+- Long press: menu with Another quote, Rotate, Set time, 12h/24h toggle,
+  WiFi setup, Calibrate, and Brightness (cycles full, half, low). A short tap does nothing, so stray touches never change the
   display.
 
 On the first boot (or whenever `touch_calibrated = false` in `config.txt`)

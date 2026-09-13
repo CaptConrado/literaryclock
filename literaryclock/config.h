@@ -6,6 +6,7 @@ struct Config {
   String   ssid;
   String   password;
   String   timezone       = "UTC0";   // IANA name from the table in timesrc.cpp, or a POSIX TZ string
+  uint8_t  rotation       = 1;        // TFT_eSPI rotation: 1 landscape, 0 portrait, 2/3 flipped
   bool     clock24h       = true;
   bool     showTime       = true;     // small digital time in the footer
   bool     sfwOnly        = false;    // skip quotes flagged not-safe-for-work

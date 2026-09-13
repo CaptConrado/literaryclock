@@ -22,7 +22,7 @@ FONT_DIR = Path.home() / "Documents/Arduino/libraries/TFT_eSPI/Fonts/GFXFF"
 CARD = ROOT / "sdcard" / "literaryclock"
 
 # ---- layout constants: keep in step with display.cpp ----
-W, H = 320, 240
+W, H = 320, 240             # swapped by --portrait
 MARGIN_X, TOP, FOOTER_H = 12, 10, 40
 BODY_W = W - 2 * MARGIN_X
 BODY_H = H - FOOTER_H - TOP - 4
@@ -143,10 +143,10 @@ def render(minute, show_time=True, hhmm=None):
     hhmm = hhmm or f"{minute // 60:02d}:{minute % 60:02d}"
     if not qs:
         big = font("FreeSerifBold24pt7b")
-        big.draw(img, (W - big.text_width(hhmm)) // 2, 70, hhmm, ACCENT)
+        big.draw(img, (W - big.text_width(hhmm)) // 2, H // 2 - 60, hhmm, ACCENT)
         sm = font("FreeSerif9pt7b")
         for i, t in enumerate(["No one has written about this minute yet.", "Add a line to personal.txt on the card."]):
-            sm.draw(img, (W - sm.text_width(t)) // 2, 130 + 22 * i, t, GREY)
+            sm.draw(img, (W - sm.text_width(t)) // 2, H // 2 + 10 + 22 * i, t, GREY)
         d.line([(MARGIN_X, H - FOOTER_H), (W - MARGIN_X, H - FOOTER_H)], fill=RULE)
         return img
     def score(q):
@@ -199,7 +199,12 @@ def main():
     ap.add_argument("times", nargs="*", help="HH:MM values (default: now)")
     ap.add_argument("--out", default=str(ROOT / "docs" / "preview.png"))
     ap.add_argument("--scale", type=int, default=2)
+    ap.add_argument("--portrait", action="store_true", help="render the 240x320 portrait layout")
     args = ap.parse_args()
+    global W, H, BODY_W, BODY_H
+    if args.portrait:
+        W, H = 240, 320
+        BODY_W, BODY_H = W - 2 * MARGIN_X, H - FOOTER_H - TOP - 4
     times = args.times or [datetime.datetime.now().strftime("%H:%M")]
     frames = []
     for t in times[:4]:

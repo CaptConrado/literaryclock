@@ -29,6 +29,13 @@ static void applyKey(const String& key, const String& val) {
   if      (key == "wifi_ssid")        config.ssid = val;
   else if (key == "wifi_password")    config.password = val;
   else if (key == "timezone")         config.timezone = val;
+  else if (key == "orientation") {
+    String v = val; v.toLowerCase();
+    if      (v == "landscape")         config.rotation = 1;
+    else if (v == "portrait")          config.rotation = 0;
+    else if (v == "landscape_flipped") config.rotation = 3;
+    else if (v == "portrait_flipped")  config.rotation = 2;
+  }
   else if (key == "clock_24h")        config.clock24h = parseBool(val);
   else if (key == "show_time")        config.showTime = parseBool(val);
   else if (key == "sfw_only")         config.sfwOnly = parseBool(val);
@@ -75,6 +82,9 @@ bool saveConfig() {
   f.print("# Timezone: a name such as Europe/London or America/New_York (see README\n");
   f.print("# for the supported list), or a POSIX TZ string like GMT0BST,M3.5.0/1,M10.5.0\n");
   f.printf("timezone = %s\n\n", config.timezone.c_str());
+  f.print("# orientation: landscape, portrait, landscape_flipped or portrait_flipped\n");
+  f.printf("orientation = %s\n", config.rotation == 1 ? "landscape" : config.rotation == 0 ? "portrait" :
+                                  config.rotation == 3 ? "landscape_flipped" : "portrait_flipped");
   f.printf("clock_24h = %s\n", config.clock24h ? "true" : "false");
   f.printf("show_time = %s\n", config.showTime ? "true" : "false");
   f.printf("sfw_only = %s\n\n", config.sfwOnly ? "true" : "false");

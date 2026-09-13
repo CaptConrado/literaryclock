@@ -7,6 +7,7 @@
 
 extern TFT_eSPI    tft;
 extern TFT_eSprite spr;
+extern int         SCR_W, SCR_H;      // current screen size (320x240 landscape, 240x320 portrait)
 
 // Palette indices (the sprite is 4-bit, colours are indexes into this palette).
 enum Colour : uint8_t {
@@ -14,6 +15,7 @@ enum Colour : uint8_t {
 };
 
 void   displayBegin();
+void   displaySetRotation(uint8_t rotation);   // re-creates the sprite for the new size
 void   setBacklight(uint8_t level);
 String formatTime(const struct tm& now);
 
@@ -25,3 +27,6 @@ void showNoQuote(const struct tm& now, bool wifiOk);
 void drawFooterStatus(const struct tm& now, bool wifiOk, const String& right);
 void drawButton(int x, int y, int w, int h, const String& label, bool pressed = false);
 void drawCentered(const String& text, int y, const GFXfont* font, uint8_t colour);
+// Convert a point in the calibrated landscape frame (320x240) to the current screen frame.
+void landscapeToScreen(int xl, int yl, int& x, int& y);
+void screenToLandscape(int x, int y, int& xl, int& yl);

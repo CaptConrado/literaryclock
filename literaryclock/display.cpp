@@ -9,10 +9,13 @@
 TFT_eSPI    tft;
 TFT_eSprite spr(&tft);
 
-static const int W = 320, H = 240;
+int SCR_W = 320, SCR_H = 240;
+#define W SCR_W
+#define H SCR_H
 static const int MARGIN_X = 12, TOP = 10, FOOTER_H = 40;
-static const int BODY_W = W - 2 * MARGIN_X;
-static const int BODY_H = H - FOOTER_H - TOP - 4;
+#define BODY_W (W - 2 * MARGIN_X)
+#define BODY_H (H - FOOTER_H - TOP - 4)
+static uint8_t curRotation = 1;
 
 static const GFXfont* REGULAR[] = { &FreeSerif12pt7b, &FreeSerif9pt7b };
 static const GFXfont* BOLD[]    = { &FreeSerifBold12pt7b, &FreeSerifBold9pt7b };
@@ -40,11 +43,38 @@ void displayBegin() {
     TFT_BLACK, TFT_BLACK, TFT_BLACK, TFT_BLACK, TFT_BLACK,
   };
   spr.setColorDepth(4);
-  if (!spr.createSprite(W, H)) {
-    Serial.println("Sprite allocation failed");
-  }
   spr.createPalette(palette, 16);
+  displaySetRotation(1);
+}
+
+void displaySetRotation(uint8_t rotation) {
+  curRotation = rotation & 3;
+  tft.setRotation(curRotation);
+  SCR_W = (curRotation & 1) ? 320 : 240;
+  SCR_H = (curRotation & 1) ? 240 : 320;
+  spr.deleteSprite();
+  if (!spr.createSprite(W, H)) Serial.println("Sprite allocation failed");
   spr.setTextWrap(false);
+  tft.fillScreen(TFT_BLACK);
+}
+
+// Rotation 1 is the calibrated landscape frame. Each TFT_eSPI rotation step turns the
+// picture 90 degrees clockwise, so rotation 0 is landscape turned anticlockwise.
+void landscapeToScreen(int xl, int yl, int& x, int& y) {
+  switch (curRotation) {
+    case 1:  x = xl;        y = yl;        break;
+    case 0:  x = yl;        y = 319 - xl;  break;
+    case 3:  x = 319 - xl;  y = 239 - yl;  break;
+    default: x = 239 - yl;  y = xl;        break;   // 2
+  }
+}
+void screenToLandscape(int x, int y, int& xl, int& yl) {
+  switch (curRotation) {
+    case 1:  xl = x;        yl = y;        break;
+    case 0:  xl = 319 - y;  yl = x;        break;
+    case 3:  xl = 319 - x;  yl = 239 - y;  break;
+    default: xl = y;        yl = 239 - x;  break;   // 2
+  }
 }
 
 void setBacklight(uint8_t level) { ledcWrite(TFT_BL, level); }
@@ -78,11 +108,12 @@ void drawButton(int x, int y, int w, int h, const String& label, bool pressed) {
 
 void showStatus(const String& title, const String& l1, const String& l2, const String& l3) {
   spr.fillSprite(C_PAPER);
-  drawCentered(title, 40, &FreeSerifBold18pt7b, C_ACCENT);
-  spr.drawFastHLine(60, 82, W - 120, C_RULE);
-  drawCentered(l1, 104, &FreeSerif12pt7b, C_INK);
-  drawCentered(l2, 140, &FreeSerif9pt7b, C_GREY);
-  drawCentered(l3, 166, &FreeSerif9pt7b, C_GREY);
+  int y0 = H / 2 - 80;
+  drawCentered(title, y0, &FreeSerifBold18pt7b, C_ACCENT);
+  spr.drawFastHLine(W / 5, y0 + 42, W - 2 * (W / 5), C_RULE);
+  drawCentered(l1, y0 + 64, &FreeSerif12pt7b, C_INK);
+  drawCentered(l2, y0 + 100, &FreeSerif9pt7b, C_GREY);
+  drawCentered(l3, y0 + 126, &FreeSerif9pt7b, C_GREY);
   spr.pushSprite(0, 0);
 }
 
@@ -197,9 +228,11 @@ void showQuote(const Quote& q, const struct tm& now, bool wifiOk, int index, int
 
 void showNoQuote(const struct tm& now, bool wifiOk) {
   spr.fillSprite(C_PAPER);
-  drawCentered(formatTime(now), 70, &FreeSerifBold24pt7b, C_ACCENT);
-  drawCentered("No one has written about this minute yet.", 130, &FreeSerif9pt7b, C_GREY);
-  drawCentered("Add a line to personal.txt on the card.", 152, &FreeSerif9pt7b, C_GREY);
+  int y0 = (H - FOOTER_H) / 2 - 40;
+  drawCentered(formatTime(now), y0, &FreeSerifBold24pt7b, C_ACCENT);
+  drawCentered("No one has written about", y0 + 60, &FreeSerif9pt7b, C_GREY);
+  drawCentered("this minute yet. Add a line to", y0 + 80, &FreeSerif9pt7b, C_GREY);
+  drawCentered("personal.txt on the card.", y0 + 100, &FreeSerif9pt7b, C_GREY);
   drawFooterStatus(now, wifiOk, "");
   spr.pushSprite(0, 0);
 }

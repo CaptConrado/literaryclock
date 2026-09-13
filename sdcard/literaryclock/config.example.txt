@@ -8,6 +8,9 @@ wifi_password =
 # for the supported list), or a POSIX TZ string like GMT0BST,M3.5.0/1,M10.5.0
 timezone = Europe/London
 
+# orientation: landscape, portrait, landscape_flipped or portrait_flipped
+orientation = landscape
+
 clock_24h = true
 show_time = true
 sfw_only = false

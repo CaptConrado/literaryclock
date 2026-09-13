@@ -126,6 +126,7 @@ void setup() {
     saveConfig();
   }
   applyTimezone();
+  displaySetRotation(config.rotation);
 
   while (!ensureIndex(progressIndex)) {
     showStatus("Literary Clock", "quotes.txt not found", "Copy the sdcard folder from the repo", "onto the card, then reinsert.");
@@ -163,10 +164,12 @@ void loop() {
     MenuChoice c = runMenu();
     switch (c) {
       case MENU_NEXT_QUOTE: if (current.size() > 1) quoteIndex = (quoteIndex + 1) % current.size(); break;
+      case MENU_ROTATE:     config.rotation = (config.rotation + 1) & 3; displaySetRotation(config.rotation); saveConfig(); break;
       case MENU_SET_TIME:   runSetTime(); lastMinute = -1; break;
-      case MENU_WIFI_SETUP: wifiSetupFlow(); break;
       case MENU_TOGGLE_24H: config.clock24h = !config.clock24h; saveConfig(); break;
+      case MENU_WIFI_SETUP: wifiSetupFlow(); break;
       case MENU_CALIBRATE:  runCalibration(); break;
+      case MENU_BRIGHTNESS: config.brightness = config.brightness > 200 ? 128 : config.brightness > 100 ? 48 : 255; saveConfig(); break;
       case MENU_BACK: break;
     }
     waitForRelease();
