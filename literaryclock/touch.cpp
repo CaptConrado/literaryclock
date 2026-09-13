@@ -31,3 +31,31 @@ bool touchGet(int16_t& x, int16_t& y) {
   y = constrain(sy, 0, 239);
   return true;
 }
+
+// ---- diagnostics: our own bit-bang read, returning the unshifted 16-bit words ----
+static void dbgWrite(uint8_t cmd) {
+  for (int i = 7; i >= 0; i--) {
+    digitalWrite(T_MOSI, (cmd >> i) & 1);
+    digitalWrite(T_CLK, LOW);  delayMicroseconds(5);
+    digitalWrite(T_CLK, HIGH); delayMicroseconds(5);
+  }
+  digitalWrite(T_MOSI, LOW);
+  digitalWrite(T_CLK, LOW);
+}
+static uint16_t dbgRead16() {
+  uint16_t r = 0;
+  for (int i = 15; i >= 0; i--) {
+    digitalWrite(T_CLK, HIGH); delayMicroseconds(5);
+    digitalWrite(T_CLK, LOW);  delayMicroseconds(5);
+    r |= (uint16_t)digitalRead(T_MISO) << i;
+  }
+  return r;
+}
+void touchDebugRead(uint16_t raw[4], int& irqLevel) {
+  static const uint8_t cmds[4] = { 0xB1, 0xC1, 0x91, 0xD0 };
+  pinMode(36, INPUT);
+  irqLevel = digitalRead(36);
+  digitalWrite(T_CS, LOW);
+  for (int i = 0; i < 4; i++) { dbgWrite(cmds[i]); raw[i] = dbgRead16(); }
+  digitalWrite(T_CS, HIGH);
+}

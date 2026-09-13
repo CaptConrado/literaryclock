@@ -191,7 +191,7 @@ void showQuote(const Quote& q, const struct tm& now, bool wifiOk, int index, int
     y += lineH;
   }
   drawAttribution(q);
-  String right = count > 1 ? String(index + 1) + "/" + String(count) : "";
+  String right = String(index + 1) + "/" + String(count);
   if (q.personal) right = "personal " + right;
   drawFooterStatus(now, wifiOk, right);
   spr.pushSprite(0, 0);

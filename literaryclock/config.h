@@ -16,6 +16,7 @@ struct Config {
   // Touch calibration: raw 12-bit values that map to the screen edges.
   uint16_t touchXMin = 200, touchXMax = 3700;
   uint16_t touchYMin = 240, touchYMax = 3800;
+  bool     touchCalibrated = false;   // set by the on-screen calibration; false runs it at boot
   bool     touchSwapXY  = false;
   bool     touchInvertX = false;
   bool     touchInvertY = false;

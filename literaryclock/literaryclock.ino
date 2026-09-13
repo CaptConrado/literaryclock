@@ -20,6 +20,7 @@
 static const uint32_t WIFI_TIMEOUT_MS = 20000;
 static const uint32_t NTP_WAIT_MS     = 12000;
 static const uint32_t LONG_PRESS_MS   = 900;
+static const uint32_t RELEASE_MS      = 120;   // finger must be absent this long to count as released
 
 static int  lastMinute = -1;
 static int  quoteOffset = 0;         // advanced by taps, reset each minute
@@ -130,36 +131,43 @@ void setup() {
     storageBegin();
   }
 
+  if (!config.touchCalibrated) runCalibration();
+
   startWifiAndNtp();
   ensureTimeInteractive();
   forceRedraw = true;
 }
 
 void loop() {
-  // ---- touch: tap = next quote, long press = menu ----
-  static bool     wasDown = false;
-  static uint32_t downAt  = 0;
+  // ---- touch: tap = next quote, long press = menu (debounced: resistive panels flicker) ----
+  static bool     pressed     = false;   // debounced state
+  static uint32_t pressedAt   = 0;
+  static uint32_t lastSeenRaw = 0;
+  static bool     longFired   = false;
   int16_t x, y;
-  bool down = touchGet(x, y);
-  if (down && !wasDown) { downAt = millis(); }
-  if (down && millis() - downAt > LONG_PRESS_MS) {
+  bool rawDown = touchGet(x, y);
+  uint32_t now = millis();
+  if (rawDown) lastSeenRaw = now;
+  if (rawDown && !pressed) { pressed = true; pressedAt = now; longFired = false; }
+  if (pressed && !rawDown && now - lastSeenRaw > RELEASE_MS) {
+    pressed = false;
+    if (!longFired) { quoteOffset++; forceRedraw = true; }          // short tap
+  }
+  if (pressed && !longFired && now - pressedAt > LONG_PRESS_MS) {
+    longFired = true;
     MenuChoice c = runMenu();
     switch (c) {
       case MENU_NEXT_QUOTE: quoteOffset++; break;
       case MENU_SET_TIME:   runSetTime(); lastMinute = -1; break;
       case MENU_WIFI_SETUP: wifiSetupFlow(); break;
       case MENU_TOGGLE_24H: config.clock24h = !config.clock24h; saveConfig(); break;
-      case MENU_TOUCH_TEST: runTouchTest(); break;
+      case MENU_CALIBRATE:  runCalibration(); break;
       case MENU_BACK: break;
     }
     waitForRelease();
-    down = false;
-    forceRedraw = true;
-  } else if (!down && wasDown) {
-    quoteOffset++;                    // short tap released
+    pressed = false;
     forceRedraw = true;
   }
-  wasDown = down;
 
   // ---- clock tick ----
   static uint32_t lastTick = 0;

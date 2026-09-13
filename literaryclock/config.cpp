@@ -40,6 +40,7 @@ static void applyKey(const String& key, const String& val) {
   else if (key == "touch_x_max")      config.touchXMax = val.toInt();
   else if (key == "touch_y_min")      config.touchYMin = val.toInt();
   else if (key == "touch_y_max")      config.touchYMax = val.toInt();
+  else if (key == "touch_calibrated") config.touchCalibrated = parseBool(val);
   else if (key == "touch_swap_xy")    config.touchSwapXY = parseBool(val);
   else if (key == "touch_invert_x")   config.touchInvertX = parseBool(val);
   else if (key == "touch_invert_y")   config.touchInvertY = parseBool(val);
@@ -82,7 +83,9 @@ bool saveConfig() {
   f.printf("night_brightness = %u\n", config.nightBrightness);
   f.printf("night_start = %s\n", fmtHHMM(config.nightStart).c_str());
   f.printf("night_end = %s\n\n", fmtHHMM(config.nightEnd).c_str());
-  f.print("# Touch calibration. Use the Touch test screen (long press) to read raw values.\n");
+  f.print("# Touch calibration, written by the on-screen calibration (menu > Calibrate).\n");
+  f.print("# Set touch_calibrated = false to run it again at next boot.\n");
+  f.printf("touch_calibrated = %s\n", config.touchCalibrated ? "true" : "false");
   f.printf("touch_x_min = %u\ntouch_x_max = %u\n", config.touchXMin, config.touchXMax);
   f.printf("touch_y_min = %u\ntouch_y_max = %u\n", config.touchYMin, config.touchYMax);
   f.printf("touch_swap_xy = %s\n", config.touchSwapXY ? "true" : "false");

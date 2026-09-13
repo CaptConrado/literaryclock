@@ -52,11 +52,13 @@ TZ string.
 
 ## Touch
 
-- Tap: another quote for this minute (the footer shows e.g. `2/5`).
+- Tap: another quote for this minute (the footer counter, e.g. `2/5`, advances).
 - Long press: menu with Another quote, Set time, WiFi setup, 12h/24h toggle,
-  and a Touch test screen that shows raw readings for calibrating the
-  `touch_*` keys in `config.txt`. If the crosshair moves along the wrong axis,
-  set `touch_swap_xy = true`; if it moves the wrong way, use `touch_invert_x`/`_y`.
+  and Calibrate.
+
+On the first boot (or whenever `touch_calibrated = false` in `config.txt`)
+the clock runs a three-point touch calibration and saves the result to the
+card, so no manual `touch_*` values are needed.
 
 ## Adding more quotes
 
