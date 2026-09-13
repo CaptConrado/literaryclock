@@ -65,8 +65,7 @@ static void render() {
   if (current.empty()) {
     showNoQuote(t, wifiConnected());
   } else {
-    // Rotate the default pick by day so the same minute shows different passages on different days.
-    int idx = (t.tm_yday + quoteOffset) % current.size();
+    int idx = quoteOffset % current.size();   // best-ranked quote first; taps step through alternates
     showQuote(current[idx], t, wifiConnected(), idx, current.size());
   }
   forceRedraw = false;

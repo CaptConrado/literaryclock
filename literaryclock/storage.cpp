@@ -1,6 +1,7 @@
 #include "storage.h"
 #include <SPI.h>
 #include <SD.h>
+#include <algorithm>
 
 // CYD SD slot is on VSPI with these pins. Touch is bit-banged so the bus is ours.
 static const int SD_SCK = 18, SD_MISO = 19, SD_MOSI = 23, SD_CS = 5;
@@ -156,6 +157,17 @@ static void appendPersonal(int minuteOfDay, std::vector<Quote>& out) {
   f.close();
 }
 
+// Higher is better: a readable length, safe, single paragraph, phrase not at the very start.
+int quoteScore(const Quote& q) {
+  int s = 0, n = q.text.length();
+  if (n >= 90 && n <= 330) s += 3; else if (n < 60 || n > 400) s -= 2;
+  if (q.sfw == '0') s -= 3; else if (q.sfw == '1') s += 1;
+  if (q.text.indexOf('\n') >= 0) s -= 1;
+  if (q.text.startsWith("{")) s -= 1;
+  if (q.personal) s += 10;
+  return s;
+}
+
 std::vector<Quote> quotesForMinute(int minuteOfDay, bool sfwOnly) {
   std::vector<Quote> out;
   appendPersonal(minuteOfDay, out);
@@ -172,5 +184,6 @@ std::vector<Quote> quotesForMinute(int minuteOfDay, bool sfwOnly) {
     out.push_back(q);
   }
   f.close();
+  std::stable_sort(out.begin(), out.end(), [](const Quote& a, const Quote& b) { return quoteScore(a) > quoteScore(b); });
   return out;
 }

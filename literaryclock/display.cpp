@@ -16,7 +16,7 @@ static const int BODY_H = H - FOOTER_H - TOP - 4;
 
 static const GFXfont* REGULAR[] = { &FreeSerif12pt7b, &FreeSerif9pt7b };
 static const GFXfont* BOLD[]    = { &FreeSerifBold12pt7b, &FreeSerifBold9pt7b };
-static const int      LINE_H[]  = { 27, 21 };
+static const int      LEADING[] = { 2, 1 };      // pixels added to each font's yAdvance
 static const int      SIZES     = 2;
 
 void displayBegin() {
@@ -63,7 +63,7 @@ String formatTime(const struct tm& now) {
 void drawCentered(const String& text, int y, const GFXfont* font, uint8_t colour) {
   spr.setFreeFont(font);
   spr.setTextDatum(TC_DATUM);
-  spr.setTextColor(colour, C_PAPER);
+  spr.setTextColor(colour);
   spr.drawString(text, W / 2, y);
 }
 
@@ -117,7 +117,8 @@ static void tokenize(const String& text, std::vector<Tok>& toks) {
 static int layout(const std::vector<Tok>& toks, int size, std::vector<Line>& lines) {
   lines.clear();
   spr.setFreeFont(REGULAR[size]);
-  int spaceW = spr.textWidth(" ");
+  // textWidth(" ") is 0 for GFX fonts (a lone space has no ink), so measure the advance instead.
+  int spaceW = spr.textWidth(" .") - spr.textWidth(".");
   Line cur; int x = 0;
   for (const Tok& t : toks) {
     if (t.paragraph) { lines.push_back(cur); cur = Line(); x = 0; continue; }
@@ -139,25 +140,20 @@ void drawFooterStatus(const struct tm& now, bool wifiOk, const String& right) {
   String left;
   if (config.showTime) left = formatTime(now);
   if (!wifiOk) left += left.isEmpty() ? "no wifi" : "  no wifi";
-  spr.setTextColor(wifiOk ? C_GREY : C_BAD, C_PAPER);
-  spr.drawString(left, MARGIN_X, H - 4);
+  spr.setTextColor(wifiOk ? C_GREY : C_BAD);
+  spr.drawString(left, MARGIN_X, H - 3);
   spr.setTextDatum(BR_DATUM);
-  spr.setTextColor(C_GREY, C_PAPER);
-  spr.drawString(right, W - MARGIN_X, H - 4);
+  spr.setTextColor(C_GREY);
+  spr.drawString(right, W - MARGIN_X, H - 3);
 }
 
 static void drawAttribution(const Quote& q) {
-  String attr = q.title;
-  if (!q.author.isEmpty()) attr += ", " + q.author;
+  String title = q.title;
   spr.setFreeFont(&FreeSerifItalic9pt7b);
   spr.setTextDatum(TR_DATUM);
-  spr.setTextColor(C_INK, C_PAPER);
-  int y = H - FOOTER_H + 4;
-  if (spr.textWidth(attr) > BODY_W - 4) {
-    spr.setTextFont(2);
-    while (attr.length() > 4 && spr.textWidth(attr) > BODY_W - 4) attr = attr.substring(0, attr.length() - 4) + "...";
-  }
-  spr.drawString(attr, W - MARGIN_X, y);
+  spr.setTextColor(C_INK);
+  while (title.length() > 4 && spr.textWidth(title) > BODY_W - 4) title = title.substring(0, title.length() - 4) + "...";
+  spr.drawString(title, W - MARGIN_X, H - FOOTER_H + 3);
 }
 
 void showQuote(const Quote& q, const struct tm& now, bool wifiOk, int index, int count) {
@@ -165,18 +161,22 @@ void showQuote(const Quote& q, const struct tm& now, bool wifiOk, int index, int
   tokenize(q.text, toks);
   std::vector<Line> lines;
   int size = 0, n = 0;
+  int lineH = 0;
   for (size = 0; size < SIZES; size++) {
     n = layout(toks, size, lines);
-    if (n * LINE_H[size] <= BODY_H) break;
+    spr.setFreeFont(REGULAR[size]);
+    lineH = spr.fontHeight() + LEADING[size];
+    if (n * lineH <= BODY_H) break;
   }
   if (size == SIZES) {                       // still too long: truncate at the smallest size
     size = SIZES - 1;
-    int maxLines = BODY_H / LINE_H[size];
+    spr.setFreeFont(REGULAR[size]);
+    lineH = spr.fontHeight() + LEADING[size];
+    int maxLines = BODY_H / lineH;
     lines.resize(maxLines);
     if (!lines.back().runs.empty()) lines.back().runs.back().text += " ...";
     n = maxLines;
   }
-  int lineH = LINE_H[size];
   int total = n * lineH;
   int y = TOP + (BODY_H - total) / 2;
 
@@ -185,15 +185,13 @@ void showQuote(const Quote& q, const struct tm& now, bool wifiOk, int index, int
   for (const Line& ln : lines) {
     for (const Run& r : ln.runs) {
       spr.setFreeFont(r.bold ? BOLD[size] : REGULAR[size]);
-      spr.setTextColor(r.bold ? C_ACCENT : C_INK, C_PAPER);
+      spr.setTextColor(r.bold ? C_ACCENT : C_INK);
       spr.drawString(r.text, MARGIN_X + r.x, y);
     }
     y += lineH;
   }
   drawAttribution(q);
-  String right = String(index + 1) + "/" + String(count);
-  if (q.personal) right = "personal " + right;
-  drawFooterStatus(now, wifiOk, right);
+  drawFooterStatus(now, wifiOk, q.author);
   spr.pushSprite(0, 0);
 }
 

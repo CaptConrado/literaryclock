@@ -17,4 +17,5 @@ bool        quotesFilePresent();
 // Loads quotes.idx, or rebuilds it by scanning quotes.txt when it is missing or stale.
 bool        ensureIndex(void (*progress)(int percent));
 int         quoteCountForMinute(int minuteOfDay);
-std::vector<Quote> quotesForMinute(int minuteOfDay, bool sfwOnly);
+std::vector<Quote> quotesForMinute(int minuteOfDay, bool sfwOnly);   // best quote first
+int         quoteScore(const Quote& q);
