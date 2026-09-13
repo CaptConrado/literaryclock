@@ -16,6 +16,7 @@ static const int MARGIN_X = 12, TOP = 10, FOOTER_H = 40;
 #define BODY_W (W - 2 * MARGIN_X)
 #define BODY_H (H - FOOTER_H - TOP - 4)
 static uint8_t curRotation = 1;
+static uint16_t palette[16];
 
 static const GFXfont* REGULAR[] = { &FreeSerif12pt7b, &FreeSerif9pt7b };
 static const GFXfont* BOLD[]    = { &FreeSerifBold12pt7b, &FreeSerifBold9pt7b };
@@ -29,7 +30,7 @@ void displayBegin() {
   ledcAttach(TFT_BL, 5000, 8);
   setBacklight(255);
 
-  uint16_t palette[16] = {
+  uint16_t pal[16] = {
     tft.color565(0xF4, 0xEE, 0xDD),   // C_PAPER
     tft.color565(0x24, 0x22, 0x20),   // C_INK
     tft.color565(0x8A, 0x1C, 0x1C),   // C_ACCENT
@@ -42,8 +43,8 @@ void displayBegin() {
     tft.color565(0xB0, 0x30, 0x20),   // C_BAD
     TFT_BLACK, TFT_BLACK, TFT_BLACK, TFT_BLACK, TFT_BLACK,
   };
+  memcpy(palette, pal, sizeof(palette));
   spr.setColorDepth(4);
-  spr.createPalette(palette, 16);
   displaySetRotation(1);
 }
 
@@ -52,8 +53,9 @@ void displaySetRotation(uint8_t rotation) {
   tft.setRotation(curRotation);
   SCR_W = (curRotation & 1) ? 320 : 240;
   SCR_H = (curRotation & 1) ? 240 : 320;
-  spr.deleteSprite();
+  spr.deleteSprite();                       // also frees the palette, so it is re-applied below
   if (!spr.createSprite(W, H)) Serial.println("Sprite allocation failed");
+  spr.createPalette(palette, 16);
   spr.setTextWrap(false);
   tft.fillScreen(TFT_BLACK);
 }
