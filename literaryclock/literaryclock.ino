@@ -126,6 +126,19 @@ void setup() {
     saveConfig();
   }
   applyTimezone();
+
+  // Recovery: a finger held on the screen during boot resets to landscape and recalibrates.
+  {
+    uint16_t xr, yr, z; int held = 0;
+    for (int i = 0; i < 10; i++) { if (touchGetRaw(xr, yr, z)) held++; delay(50); }
+    if (held >= 7) {
+      Serial.println("Touch held at boot: resetting orientation and calibration");
+      config.rotation = 1;
+      config.touchCalibrated = false;
+      showStatus("Literary Clock", "Reset to landscape", "Calibration follows...");
+      delay(1500);
+    }
+  }
   displaySetRotation(config.rotation);
 
   while (!ensureIndex(progressIndex)) {

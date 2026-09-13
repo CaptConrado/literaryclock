@@ -199,11 +199,13 @@ static bool sampleRaw(int txl, int tyl, uint32_t& rx, uint32_t& ry) {
 }
 
 void runCalibration() {
+  // Always calibrate in the landscape frame so target positions never depend on the rotation maths.
+  uint8_t savedRotation = config.rotation;
+  displaySetRotation(1);
   const int M = 28;                                // target inset from the edges (landscape frame)
   uint32_t ax, ay, bx, by, cx, cy;
-  if (!sampleRaw(M, M, ax, ay)) return;            // landscape top-left
-  if (!sampleRaw(320 - M, M, bx, by)) return;      // landscape top-right
-  if (!sampleRaw(M, 240 - M, cx, cy)) return;      // landscape bottom-left
+  bool ok = sampleRaw(M, M, ax, ay) && sampleRaw(320 - M, M, bx, by) && sampleRaw(M, 240 - M, cx, cy);
+  if (!ok) { displaySetRotation(savedRotation); return; }
   long dxX = labs((long)bx - (long)ax), dxY = labs((long)by - (long)ay);
   bool swap = dxY > dxX;
   long x0 = swap ? ay : ax, x1 = swap ? by : bx;
@@ -236,6 +238,7 @@ void runCalibration() {
     spr.pushSprite(0, 0);
     delay(30);
   }
+  displaySetRotation(savedRotation);
 }
 
 // ---------------- no time / no wifi prompt ----------------
