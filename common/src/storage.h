@@ -11,7 +11,9 @@ struct Quote {
   bool   personal;  // came from personal.txt
 };
 
-bool        storageBegin();               // mounts the card; retries at a conservative SPI clock
+#include <SPI.h>
+// Mounts the card on an SPI bus the sketch has already begun (pins are board-specific).
+bool        storageBegin(SPIClass& spi, int csPin);
 const char* storageError();               // human-readable reason after a failed storageBegin
 bool        quotesFilePresent();
 // Loads quotes.idx, or rebuilds it by scanning quotes.txt when it is missing or stale.

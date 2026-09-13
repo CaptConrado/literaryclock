@@ -1,5 +1,5 @@
 #include "touch.h"
-#include "config.h"
+#include <config.h>
 #include "display.h"
 #include <XPT2046_Bitbang.h>
 

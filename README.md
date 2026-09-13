@@ -112,11 +112,10 @@ Upload must be at 115200 baud (already in the FQBN); 921600 fails on this board.
 ## Layout of the code
 
 ```
+common/               shared library: config.txt, SD quote database, WiFi/NTP/portal
+xteink/               Xteink X4 e-paper port (see xteink/README.md)
 literaryclock/
   literaryclock.ino   boot sequence, main loop, touch gestures
-  config.*            config.txt parsing and writing
-  storage.*           SD mount, quotes.idx load/rebuild, per-minute lookup, personal.txt
-  timesrc.*           WiFi, NTP, timezone table, manual time, captive portal
   display.*           4-bit palette sprite, word wrap with bold phrase, footer
   ui.*                menu, set-time, touch-test and no-time screens
 tools/build_quotes.py CSV -> quotes.txt + quotes.idx

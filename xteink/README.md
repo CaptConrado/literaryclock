@@ -1,8 +1,13 @@
-# Xteink X4 port (not started)
+# Xteink X4 port
 
-Second target for the literary clock: the Xteink X4 e-paper reader. Nothing
-here builds yet; this file records what the port involves so it can be
-picked up later, after the CYD version has passed its first hardware test.
+Second target for the literary clock: the Xteink X4 e-paper reader.
+`literaryclock_xteink/` compiles for the ESP32-C3 (`tools/flash_xteink.sh`) and
+shares config, SD storage and WiFi/NTP code with the CYD build via `../common`.
+Status: compiled, not yet run on the device. `HARDWARE.md` has the pin map
+and flashing notes with sources.
+
+Buttons: Confirm = another quote, Left/Right = rotate, Back = full refresh,
+Power held 3 s = WiFi setup portal. v1 stays awake and expects USB power.
 
 ## Hardware (from the Papyrix and CrossPoint community firmware docs)
 

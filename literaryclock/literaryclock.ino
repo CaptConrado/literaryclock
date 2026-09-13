@@ -10,12 +10,16 @@
 #include <WiFi.h>
 #include <SD.h>
 #include <time.h>
-#include "config.h"
-#include "storage.h"
+#include <config.h>     // shared code lives in ../common (build with --library common)
+#include <storage.h>
+#include <timesrc.h>
 #include "touch.h"
-#include "timesrc.h"
 #include "display.h"
 #include "ui.h"
+
+// CYD SD slot is on VSPI with these pins. Touch is bit-banged so the bus is ours.
+static const int SD_SCK = 18, SD_MISO = 19, SD_MOSI = 23, SD_CS = 5;
+static SPIClass sdSPI(VSPI);
 
 static const uint32_t WIFI_TIMEOUT_MS = 20000;
 static const uint32_t NTP_WAIT_MS     = 12000;
@@ -117,7 +121,8 @@ void setup() {
   showStatus("Literary Clock", "Starting...");
   touchBegin();
 
-  while (!storageBegin()) {
+  sdSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
+  while (!storageBegin(sdSPI, SD_CS)) {
     showStatus("Literary Clock", "SD card problem", storageError(), "Retrying...");
     delay(3000);
   }
@@ -145,7 +150,7 @@ void setup() {
     showStatus("Literary Clock", "quotes.txt not found", "Copy the sdcard folder from the repo", "onto the card, then reinsert.");
     delay(3000);
     SD.end();
-    storageBegin();
+    storageBegin(sdSPI, SD_CS);
   }
 
   if (!config.touchCalibrated) runCalibration();

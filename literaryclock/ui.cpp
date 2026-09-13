@@ -1,8 +1,8 @@
 #include "ui.h"
 #include "display.h"
 #include "touch.h"
-#include "timesrc.h"
-#include "config.h"
+#include <timesrc.h>
+#include <config.h>
 
 // All screens lay themselves out from SCR_W / SCR_H so they work in portrait and landscape.
 struct Btn { int x, y, w, h; String label; };

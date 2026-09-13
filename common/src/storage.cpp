@@ -3,24 +3,20 @@
 #include <SD.h>
 #include <algorithm>
 
-// CYD SD slot is on VSPI with these pins. Touch is bit-banged so the bus is ours.
-static const int SD_SCK = 18, SD_MISO = 19, SD_MOSI = 23, SD_CS = 5;
 static const char* QUOTES_PATH   = "/literaryclock/quotes.txt";
 static const char* INDEX_PATH    = "/literaryclock/quotes.idx";
 static const char* PERSONAL_PATH = "/literaryclock/personal.txt";
 
-static SPIClass  sdSPI(VSPI);
 static String    lastError;
 static uint32_t  idxOffset[1440];
 static uint16_t  idxCount[1440];
 static bool      indexReady = false;
 
-bool storageBegin() {
-  sdSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
+bool storageBegin(SPIClass& spi, int csPin) {
   const uint32_t speeds[] = { 8000000, 4000000, 1000000 };
   for (uint32_t speed : speeds) {
     for (int attempt = 0; attempt < 2; attempt++) {
-      if (SD.begin(SD_CS, sdSPI, speed)) {
+      if (SD.begin(csPin, spi, speed)) {
         Serial.printf("SD mounted at %lu Hz, type %d, %llu MB\n",
                       (unsigned long)speed, SD.cardType(), SD.cardSize() / (1024ULL * 1024ULL));
         return true;

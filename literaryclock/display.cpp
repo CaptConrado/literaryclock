@@ -1,5 +1,5 @@
 #include "display.h"
-#include "config.h"
+#include <config.h>
 #include <vector>
 
 #ifndef TFT_BL
