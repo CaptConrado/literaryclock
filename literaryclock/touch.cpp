@@ -18,19 +18,17 @@ bool touchGetRaw(uint16_t& xRaw, uint16_t& yRaw, uint16_t& z) {
   return true;
 }
 
+bool touchCalibrated() { return config.touch[config.rotation & 3].valid; }
+
 bool touchGet(int16_t& x, int16_t& y) {
   uint16_t xr, yr, z;
   if (!touchGetRaw(xr, yr, z)) return false;
-  // Command 0x91 (the library's "x") maps to screen X in landscape, matching the
-  // XPT2046_Touchscreen calibration used on this board. touch_swap_xy flips it if not.
-  if (config.touchSwapXY) { uint16_t t = xr; xr = yr; yr = t; }
-  long sx = map((long)xr, config.touchXMin, config.touchXMax, 0, 319);
-  long sy = map((long)yr, config.touchYMin, config.touchYMax, 0, 239);
-  if (config.touchInvertX) sx = 319 - sx;
-  if (config.touchInvertY) sy = 239 - sy;
-  int xs, ys;
-  landscapeToScreen(constrain(sx, 0, 319), constrain(sy, 0, 239), xs, ys);
-  x = xs; y = ys;
+  const Config::TouchCal& c = config.touch[config.rotation & 3];
+  if (c.swapXY) { uint16_t t = xr; xr = yr; yr = t; }
+  long sx = map((long)xr, c.xMin, c.xMax, 0, SCR_W - 1);
+  long sy = map((long)yr, c.yMin, c.yMax, 0, SCR_H - 1);
+  x = constrain(sx, 0, SCR_W - 1);
+  y = constrain(sy, 0, SCR_H - 1);
   return true;
 }
 

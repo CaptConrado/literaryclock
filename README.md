@@ -57,8 +57,8 @@ TZ string.
 
 Set `orientation` in `config.txt` to `landscape`, `portrait`,
 `landscape_flipped` or `portrait_flipped`, or use **Rotate** in the menu, which
-cycles through the four and saves the choice. Touch calibration carries over
-between orientations.
+cycles through the four and saves the choice. Each orientation is touch
+calibrated separately the first time you rotate into it.
 
 ## Touch
 
@@ -68,9 +68,11 @@ between orientations.
   WiFi setup, Calibrate, and Brightness (cycles full, half, low). A short tap does nothing, so stray touches never change the
   display.
 
-On the first boot (or whenever `touch_calibrated = false` in `config.txt`)
-the clock runs a three-point touch calibration and saves the result to the
-card, so no manual `touch_*` values are needed.
+Touch is calibrated per orientation: the first time the clock is used in a
+given rotation it shows three targets, then saves a `touch_cal_N` line to
+`config.txt`. Delete that line to redo it. Holding a finger on the screen
+during the first two seconds after power-up resets to landscape and clears
+all four calibrations.
 
 ## Adding more quotes
 

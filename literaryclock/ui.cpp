@@ -168,11 +168,8 @@ void runTouchTest() {
 }
 
 // ---------------- touch calibration ----------------
-// Targets are defined in the landscape frame (the frame the calibration constants describe)
-// and drawn wherever that point falls on the current screen.
-static bool sampleRaw(int txl, int tyl, uint32_t& rx, uint32_t& ry) {
-  int tx, ty;
-  landscapeToScreen(txl, tyl, tx, ty);
+// Runs in the current orientation and stores a calibration for this rotation only.
+static bool sampleRaw(int tx, int ty, uint32_t& rx, uint32_t& ry) {
   waitForRelease();
   uint32_t start = millis();
   while (true) {
@@ -199,30 +196,27 @@ static bool sampleRaw(int txl, int tyl, uint32_t& rx, uint32_t& ry) {
 }
 
 void runCalibration() {
-  // Always calibrate in the landscape frame so target positions never depend on the rotation maths.
-  uint8_t savedRotation = config.rotation;
-  displaySetRotation(1);
-  const int M = 28;                                // target inset from the edges (landscape frame)
+  const int M = 28;                                // target inset from the edges
+  const int Wd = SCR_W, Hd = SCR_H;
   uint32_t ax, ay, bx, by, cx, cy;
-  bool ok = sampleRaw(M, M, ax, ay) && sampleRaw(320 - M, M, bx, by) && sampleRaw(M, 240 - M, cx, cy);
-  if (!ok) { displaySetRotation(savedRotation); return; }
+  bool ok = sampleRaw(M, M, ax, ay) && sampleRaw(Wd - M, M, bx, by) && sampleRaw(M, Hd - M, cx, cy);
+  if (!ok) return;
+  // Moving along screen X changed one raw axis much more than the other: that axis is X.
   long dxX = labs((long)bx - (long)ax), dxY = labs((long)by - (long)ay);
   bool swap = dxY > dxX;
-  long x0 = swap ? ay : ax, x1 = swap ? by : bx;
-  long y0 = swap ? ax : ay, y1 = swap ? cx : cy;
-  float sx = (float)(x1 - x0) / (320 - 2 * M);
-  float sy = (float)(y1 - y0) / (240 - 2 * M);
-  config.touchSwapXY   = swap;
-  config.touchInvertX  = false;
-  config.touchInvertY  = false;
-  config.touchXMin     = constrain((long)(x0 - M * sx), 0, 4095);
-  config.touchXMax     = constrain((long)(x0 + (319 - M) * sx), 0, 4095);
-  config.touchYMin     = constrain((long)(y0 - M * sy), 0, 4095);
-  config.touchYMax     = constrain((long)(y0 + (239 - M) * sy), 0, 4095);
-  config.touchCalibrated = true;
+  long x0 = swap ? ay : ax, x1 = swap ? by : bx;   // raw X at screen M and Wd-M
+  long y0 = swap ? ax : ay, y1 = swap ? cx : cy;   // raw Y at screen M and Hd-M
+  float sx = (float)(x1 - x0) / (Wd - 2 * M);
+  float sy = (float)(y1 - y0) / (Hd - 2 * M);
+  Config::TouchCal& c = config.touch[config.rotation & 3];
+  c.valid  = true;
+  c.swapXY = swap;
+  c.xMin   = constrain((long)(x0 - M * sx), 0, 4095);
+  c.xMax   = constrain((long)(x0 + (Wd - 1 - M) * sx), 0, 4095);
+  c.yMin   = constrain((long)(y0 - M * sy), 0, 4095);
+  c.yMax   = constrain((long)(y0 + (Hd - 1 - M) * sy), 0, 4095);
   bool saved = saveConfig();
-  Serial.printf("calibration: swap=%d x %u..%u y %u..%u saved=%d\n", swap,
-                config.touchXMin, config.touchXMax, config.touchYMin, config.touchYMax, saved);
+  Serial.printf("calibration rot %d: swap=%d x %d..%d y %d..%d saved=%d\n", config.rotation, swap, c.xMin, c.xMax, c.yMin, c.yMax, saved);
 
   waitForRelease();
   uint32_t last = millis();
@@ -238,7 +232,6 @@ void runCalibration() {
     spr.pushSprite(0, 0);
     delay(30);
   }
-  displaySetRotation(savedRotation);
 }
 
 // ---------------- no time / no wifi prompt ----------------

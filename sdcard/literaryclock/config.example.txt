@@ -21,11 +21,5 @@ night_brightness = 30
 night_start = off
 night_end = off
 
-# Touch calibration. Use the Touch test screen (long press) to read raw values.
-touch_x_min = 200
-touch_x_max = 3700
-touch_y_min = 240
-touch_y_max = 3800
-touch_swap_xy = false
-touch_invert_x = false
-touch_invert_y = false
+# Touch calibration is written here automatically, one touch_cal_N line per
+# display rotation (swap,xmin,xmax,ymin,ymax). Delete a line to recalibrate.

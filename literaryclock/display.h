@@ -27,6 +27,4 @@ void showNoQuote(const struct tm& now, bool wifiOk);
 void drawFooterStatus(const struct tm& now, bool wifiOk, const String& right);
 void drawButton(int x, int y, int w, int h, const String& label, bool pressed = false);
 void drawCentered(const String& text, int y, const GFXfont* font, uint8_t colour);
-// Convert a point in the calibrated landscape frame (320x240) to the current screen frame.
-void landscapeToScreen(int xl, int yl, int& x, int& y);
-void screenToLandscape(int x, int y, int& xl, int& yl);
+

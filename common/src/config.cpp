@@ -43,14 +43,21 @@ static void applyKey(const String& key, const String& val) {
   else if (key == "night_brightness") config.nightBrightness = constrain(val.toInt(), 0, 255);
   else if (key == "night_start")      config.nightStart = parseHHMM(val);
   else if (key == "night_end")        config.nightEnd = parseHHMM(val);
-  else if (key == "touch_x_min")      config.touchXMin = val.toInt();
-  else if (key == "touch_x_max")      config.touchXMax = val.toInt();
-  else if (key == "touch_y_min")      config.touchYMin = val.toInt();
-  else if (key == "touch_y_max")      config.touchYMax = val.toInt();
-  else if (key == "touch_calibrated") config.touchCalibrated = parseBool(val);
-  else if (key == "touch_swap_xy")    config.touchSwapXY = parseBool(val);
-  else if (key == "touch_invert_x")   config.touchInvertX = parseBool(val);
-  else if (key == "touch_invert_y")   config.touchInvertY = parseBool(val);
+  else if (key.startsWith("touch_cal_") && key.length() == 11) {
+    // touch_cal_<rotation> = swap,xmin,xmax,ymin,ymax
+    int r = key.charAt(10) - '0';
+    if (r < 0 || r > 3) return;
+    int v[5], n = 0, start = 0;
+    while (n < 5) {
+      int comma = val.indexOf(',', start);
+      v[n++] = val.substring(start, comma < 0 ? val.length() : comma).toInt();
+      if (comma < 0) break;
+      start = comma + 1;
+    }
+    if (n == 5) {
+      config.touch[r] = { true, v[0] != 0, (int16_t)v[1], (int16_t)v[2], (int16_t)v[3], (int16_t)v[4] };
+    }
+  }
 }
 
 bool loadConfig() {
@@ -93,14 +100,12 @@ bool saveConfig() {
   f.printf("night_brightness = %u\n", config.nightBrightness);
   f.printf("night_start = %s\n", fmtHHMM(config.nightStart).c_str());
   f.printf("night_end = %s\n\n", fmtHHMM(config.nightEnd).c_str());
-  f.print("# Touch calibration, written by the on-screen calibration (menu > Calibrate).\n");
-  f.print("# Set touch_calibrated = false to run it again at next boot.\n");
-  f.printf("touch_calibrated = %s\n", config.touchCalibrated ? "true" : "false");
-  f.printf("touch_x_min = %u\ntouch_x_max = %u\n", config.touchXMin, config.touchXMax);
-  f.printf("touch_y_min = %u\ntouch_y_max = %u\n", config.touchYMin, config.touchYMax);
-  f.printf("touch_swap_xy = %s\n", config.touchSwapXY ? "true" : "false");
-  f.printf("touch_invert_x = %s\ntouch_invert_y = %s\n",
-           config.touchInvertX ? "true" : "false", config.touchInvertY ? "true" : "false");
+  f.print("# Touch calibration per display rotation, written by the on-screen calibration.\n");
+  f.print("# Format: swap,xmin,xmax,ymin,ymax. Delete a line to recalibrate that rotation at next use.\n");
+  for (int r = 0; r < 4; r++) {
+    const Config::TouchCal& c = config.touch[r];
+    if (c.valid) f.printf("touch_cal_%d = %d,%d,%d,%d,%d\n", r, c.swapXY ? 1 : 0, c.xMin, c.xMax, c.yMin, c.yMax);
+  }
   f.close();
   return true;
 }

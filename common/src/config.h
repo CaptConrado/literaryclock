@@ -14,13 +14,10 @@ struct Config {
   uint8_t  nightBrightness = 30;
   int16_t  nightStart     = -1;       // minutes after midnight, -1 = no night dimming
   int16_t  nightEnd       = -1;
-  // Touch calibration: raw 12-bit values that map to the screen edges.
-  uint16_t touchXMin = 200, touchXMax = 3700;
-  uint16_t touchYMin = 240, touchYMax = 3800;
-  bool     touchCalibrated = false;   // set by the on-screen calibration; false runs it at boot
-  bool     touchSwapXY  = false;
-  bool     touchInvertX = false;
-  bool     touchInvertY = false;
+  // Touch calibration, one set per display rotation (index = rotation 0..3), measured in
+  // that rotation's own screen frame. Raw 12-bit values at the screen edges; min may exceed max.
+  struct TouchCal { bool valid = false; bool swapXY = false; int16_t xMin = 0, xMax = 4095, yMin = 0, yMax = 4095; };
+  TouchCal touch[4];
 };
 
 extern Config config;

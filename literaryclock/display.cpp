@@ -60,28 +60,6 @@ void displaySetRotation(uint8_t rotation) {
   tft.fillScreen(TFT_BLACK);
 }
 
-// Rotation 1 is the calibrated landscape frame. On this panel TFT_eSPI's landscape runs
-// against the native scan direction (x = 319 - row, y = 239 - column), which gives:
-// rotation 0 (MX):  x = yl,       y = 319 - xl      (verified on the board: rotation 2 worked with
-// rotation 2 (MY):  x = 239 - yl, y = xl             this mapping before it was mistakenly swapped)
-// rotation 3:       x = 319 - xl, y = 239 - yl
-void landscapeToScreen(int xl, int yl, int& x, int& y) {
-  switch (curRotation) {
-    case 1:  x = xl;        y = yl;        break;
-    case 0:  x = yl;        y = 319 - xl;  break;
-    case 3:  x = 319 - xl;  y = 239 - yl;  break;
-    default: x = 239 - yl;  y = xl;        break;   // 2
-  }
-}
-void screenToLandscape(int x, int y, int& xl, int& yl) {
-  switch (curRotation) {
-    case 1:  xl = x;        yl = y;        break;
-    case 0:  xl = 319 - y;  yl = x;        break;
-    case 3:  xl = 319 - x;  yl = 239 - y;  break;
-    default: xl = y;        yl = 239 - x;  break;   // 2
-  }
-}
-
 void setBacklight(uint8_t level) { ledcWrite(TFT_BL, level); }
 
 String formatTime(const struct tm& now) {

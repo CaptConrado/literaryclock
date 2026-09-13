@@ -118,8 +118,21 @@ static void ensureTimeInteractive() {
 void setup() {
   Serial.begin(115200);
   displayBegin();                    // sprite is allocated here, before WiFi claims heap
-  showStatus("Literary Clock", "Starting...");
   touchBegin();
+  // Recovery gesture: a finger on the screen during the first two seconds after power-up
+  // resets orientation to landscape and reruns calibration (works without the card in a reader).
+  bool recover = false;
+  {
+    int held = 0;
+    for (int i = 0; i < 20; i++) {
+      uint16_t xr, yr, z;
+      if (touchGetRaw(xr, yr, z)) held++;
+      showStatus("Literary Clock", "Starting...", held ? "Touch detected: keep holding to reset" : "Hold the screen now to reset touch", String(held));
+      delay(100);
+    }
+    recover = held >= 8;
+    if (recover) { showStatus("Literary Clock", "Reset to landscape", "Calibration follows..."); delay(1200); }
+  }
 
   sdSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
   while (!storageBegin(sdSPI, SD_CS)) {
@@ -132,18 +145,7 @@ void setup() {
   }
   applyTimezone();
 
-  // Recovery: a finger held on the screen during boot resets to landscape and recalibrates.
-  {
-    uint16_t xr, yr, z; int held = 0;
-    for (int i = 0; i < 10; i++) { if (touchGetRaw(xr, yr, z)) held++; delay(50); }
-    if (held >= 7) {
-      Serial.println("Touch held at boot: resetting orientation and calibration");
-      config.rotation = 1;
-      config.touchCalibrated = false;
-      showStatus("Literary Clock", "Reset to landscape", "Calibration follows...");
-      delay(1500);
-    }
-  }
+  if (recover) { config.rotation = 1; for (auto& c : config.touch) c.valid = false; saveConfig(); }
   displaySetRotation(config.rotation);
 
   while (!ensureIndex(progressIndex)) {
@@ -153,7 +155,7 @@ void setup() {
     storageBegin(sdSPI, SD_CS);
   }
 
-  if (!config.touchCalibrated) runCalibration();
+  if (!touchCalibrated()) runCalibration();
 
   startWifiAndNtp();
   ensureTimeInteractive();
@@ -182,7 +184,8 @@ void loop() {
     MenuChoice c = runMenu();
     switch (c) {
       case MENU_NEXT_QUOTE: if (current.size() > 1) quoteIndex = (quoteIndex + 1) % current.size(); break;
-      case MENU_ROTATE:     config.rotation = (config.rotation + 1) & 3; displaySetRotation(config.rotation); saveConfig(); break;
+      case MENU_ROTATE:     config.rotation = (config.rotation + 1) & 3; displaySetRotation(config.rotation); saveConfig();
+                            if (!touchCalibrated()) runCalibration(); break;
       case MENU_SET_TIME:   runSetTime(); lastMinute = -1; break;
       case MENU_TOGGLE_24H: config.clock24h = !config.clock24h; saveConfig(); break;
       case MENU_WIFI_SETUP: wifiSetupFlow(); break;
