@@ -4,7 +4,10 @@ A clock that tells the time with literature. Every minute it shows a passage
 that mentions the current time, with the time phrase in bold red, and the book
 and author underneath. It runs on the ESP32-2432S028 "Cheap Yellow Display"
 (320x240 ILI9341 with resistive touch) and keeps its quote database on the
-board's SD card, so quotes can be edited without reflashing.
+board's SD card, so quotes can be edited without reflashing. A second build
+targets the Xteink X4 e-paper reader (see `xteink/`).
+
+![Screen mockup](docs/screen-mockup.png)
 
 ## What is on the card
 
@@ -121,8 +124,12 @@ literaryclock/
 tools/build_quotes.py CSV -> quotes.txt + quotes.idx
 ```
 
-## Data licence
+## Licence
+
+Code is GPL-3.0 (see `LICENSE`); the Xteink build links the GPL-3 GxEPD2
+library, and the rest of the repo uses the same licence for simplicity.
 
 Quotes come from the [literature-clock](https://github.com/JohsEnevoldsen/literature-clock)
 project, originally crowd-sourced by the Guardian, and are licensed
-CC BY-NC-SA 2.5. This project inherits that licence for the data.
+CC BY-NC-SA 2.5. The generated `quotes.txt` inherits that licence: share it
+with attribution, non-commercially, under the same terms.

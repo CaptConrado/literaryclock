@@ -76,7 +76,16 @@ void setup() {
   Serial.begin(115200);
   buttonsBegin();
   epdBegin();
-  epdShowStatus("Literary Clock", "Starting...");
+  // Boot diagnostics on the panel (no serial needed): raw button ladders, power pin, battery, USB.
+  {
+    pinMode(USB_DETECT, INPUT);
+    int a = analogRead(ADC_BTN_A), b = analogRead(ADC_BTN_B);
+    int bat = analogReadMilliVolts(BAT_ADC) * 2;
+    String l2 = "buttons A " + String(a) + "  B " + String(b) + "  power " + String(digitalRead(BTN_POWER) ? "up" : "DOWN");
+    String l3 = "battery " + String(bat / 1000.0, 2) + " V   usb " + String(digitalRead(USB_DETECT) ? "yes" : "no");
+    epdShowStatus("Literary Clock", "Starting...", l2, l3);
+    delay(2500);
+  }
 
   while (!storageBegin(SPI, SD_CS)) {        // SD shares the panel's SPI bus
     epdShowStatus("Literary Clock", "SD card problem", storageError(), "Retrying...");
