@@ -184,6 +184,6 @@ std::vector<Quote> quotesForMinute(int minuteOfDay, bool sfwOnly) {
     out.push_back(q);
   }
   f.close();
-  std::stable_sort(out.begin(), out.end(), [](const Quote& a, const Quote& b) { return quoteScore(a) > quoteScore(b); });
+  std::stable_sort(out.begin(), out.end(), [](const Quote& a, const Quote& b) { return a.personal && !b.personal; });
   return out;
 }

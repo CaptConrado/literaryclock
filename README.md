@@ -52,9 +52,11 @@ TZ string.
 
 ## Touch
 
-- Tap: another quote for this minute (the footer counter, e.g. `2/5`, advances).
+- Each minute shows one quote, picked at random from that minute's set and
+  held until the minute changes. Entries in `personal.txt` take priority.
 - Long press: menu with Another quote, Set time, WiFi setup, 12h/24h toggle,
-  and Calibrate.
+  and Calibrate. A short tap does nothing, so stray touches never change the
+  display.
 
 On the first boot (or whenever `touch_calibrated = false` in `config.txt`)
 the clock runs a three-point touch calibration and saves the result to the

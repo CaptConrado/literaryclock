@@ -21,9 +21,10 @@ static const uint32_t WIFI_TIMEOUT_MS = 20000;
 static const uint32_t NTP_WAIT_MS     = 12000;
 static const uint32_t LONG_PRESS_MS   = 900;
 static const uint32_t RELEASE_MS      = 120;   // finger must be absent this long to count as released
+static const uint32_t PRESS_MS        = 80;    // finger must be present this long to count as a press (noise filter)
 
 static int  lastMinute = -1;
-static int  quoteOffset = 0;         // advanced by taps, reset each minute
+static int  quoteIndex = 0;          // chosen at random when the minute changes
 static bool forceRedraw = true;
 static std::vector<Quote> current;
 static uint32_t lastWifiCheck = 0;
@@ -57,16 +58,19 @@ static void render() {
   int minute = t.tm_hour * 60 + t.tm_min;
   if (minute != lastMinute) {
     lastMinute = minute;
-    quoteOffset = 0;
     current = quotesForMinute(minute, config.sfwOnly);
-    Serial.printf("%02d:%02d -> %d quotes\n", t.tm_hour, t.tm_min, (int)current.size());
+    // One quote per minute: pick at random among this minute's quotes (personal.txt entries win if present).
+    int pool = 0;
+    while (pool < (int)current.size() && current[pool].personal) pool++;
+    if (pool == 0) pool = current.size();
+    quoteIndex = pool > 0 ? esp_random() % pool : 0;
+    Serial.printf("%02d:%02d -> %d quotes, showing #%d\n", t.tm_hour, t.tm_min, (int)current.size(), quoteIndex);
   }
   applyBacklight(t);
   if (current.empty()) {
     showNoQuote(t, wifiConnected());
   } else {
-    int idx = quoteOffset % current.size();   // best-ranked quote first; taps step through alternates
-    showQuote(current[idx], t, wifiConnected(), idx, current.size());
+    showQuote(current[quoteIndex], t, wifiConnected(), quoteIndex, current.size());
   }
   forceRedraw = false;
 }
@@ -140,23 +144,25 @@ void setup() {
 void loop() {
   // ---- touch: tap = next quote, long press = menu (debounced: resistive panels flicker) ----
   static bool     pressed     = false;   // debounced state
-  static uint32_t pressedAt   = 0;
+  static uint32_t pressedAt   = 0;       // first raw contact of the current press
   static uint32_t lastSeenRaw = 0;
   static bool     longFired   = false;
   int16_t x, y;
   bool rawDown = touchGet(x, y);
   uint32_t now = millis();
-  if (rawDown) lastSeenRaw = now;
-  if (rawDown && !pressed) { pressed = true; pressedAt = now; longFired = false; }
+  if (rawDown) {
+    if (lastSeenRaw == 0 || now - lastSeenRaw > RELEASE_MS) pressedAt = now;   // new contact
+    lastSeenRaw = now;
+    if (!pressed && now - pressedAt >= PRESS_MS) { pressed = true; longFired = false; }
+  }
   if (pressed && !rawDown && now - lastSeenRaw > RELEASE_MS) {
-    pressed = false;
-    if (!longFired) { quoteOffset++; forceRedraw = true; }          // short tap
+    pressed = false;                                                 // short tap: intentionally does nothing
   }
   if (pressed && !longFired && now - pressedAt > LONG_PRESS_MS) {
     longFired = true;
     MenuChoice c = runMenu();
     switch (c) {
-      case MENU_NEXT_QUOTE: quoteOffset++; break;
+      case MENU_NEXT_QUOTE: if (current.size() > 1) quoteIndex = (quoteIndex + 1) % current.size(); break;
       case MENU_SET_TIME:   runSetTime(); lastMinute = -1; break;
       case MENU_WIFI_SETUP: wifiSetupFlow(); break;
       case MENU_TOGGLE_24H: config.clock24h = !config.clock24h; saveConfig(); break;
